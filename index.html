@@ -15,10 +15,11 @@ header p{margin:0;font-size:14px}
 .toolbar{display:flex;gap:8px;flex-wrap:wrap;padding:12px}
 button{border:0;border-radius:9px;padding:12px 15px;background:#e2eaf3;color:#163b5c;font-weight:bold;cursor:pointer}
 button.active{background:#0878dc;color:white}
-#map{height:64vh;min-height:380px;width:100%;background:#e5edf4}
+#map{height:70vh;min-height:420px;width:100%;background:#e5edf4}
 .note{padding:12px;font-size:13px;color:#536579}
 .leaflet-popup-content{min-width:190px}
 .leaflet-popup-content button{margin-top:8px;background:#0878dc;color:white}
+#boundaryStatus{padding:0 12px;font-size:13px;color:#536579}
 </style>
 </head>
 <body>
@@ -31,12 +32,14 @@ button.active{background:#0878dc;color:white}
 <button id="all" class="active" onclick="showLayer('all')">Tất cả</button>
 <button id="heritage" onclick="showLayer('heritage')">🏛 Di tích</button>
 <button id="qr" onclick="showLayer('qr')">▦ Điểm QR</button>
+<button onclick="showWholeWard()">📍 Toàn cảnh phường</button>
 </div>
 
 <div id="map"></div>
+<div id="boundaryStatus">Đang tải ranh giới phường Lái Thiêu...</div>
 <div class="note">
-Bản thử nghiệm. Vị trí ghim minh họa chưa phải tọa độ đã xác minh.
-Cần kiểm tra vị trí thực tế trước khi công bố.
+Ranh giới lấy từ dữ liệu địa giới hành chính năm 2025.
+Các ghim di tích và QR hiện vẫn là vị trí minh họa, cần xác minh trước khi công bố.
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -47,6 +50,60 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
  maxZoom:19,
  attribution:'© OpenStreetMap contributors'
 }).addTo(map);
+
+// Ranh giới hành chính phường Lái Thiêu
+let boundaryLayer = null;
+let wardBounds = null;
+
+fetch('./lai-thieu.geojson')
+ .then(response => {
+   if (!response.ok) throw new Error('Không tải được file GeoJSON');
+   return response.json();
+ })
+ .then(data => {
+   // Chỉ lấy đối tượng đúng tên phường Lái Thiêu
+   const wardFeatures = (data.features || []).filter(feature =>
+     feature.properties &&
+     feature.properties.a03_ten === 'Phường Lái Thiêu'
+   );
+
+   if (!wardFeatures.length) {
+     throw new Error('Không tìm thấy đối tượng Phường Lái Thiêu');
+   }
+
+   boundaryLayer = L.geoJSON(wardFeatures, {
+     style: {
+       color: '#ffcc00',
+       weight: 4,
+       opacity: 1,
+       fillColor: '#7c4dff',
+       fillOpacity: 0.13
+     },
+     onEachFeature: (feature, layer) => {
+       layer.bindPopup(
+         '<b>Phường Lái Thiêu</b><br>' +
+         'Diện tích: ' +
+         (feature.properties.a07_dt || 'Chưa có') +
+         ' km²<br>' +
+         'Địa giới hành chính năm 2025'
+       );
+     }
+   }).addTo(map);
+
+   wardBounds = boundaryLayer.getBounds();
+
+   if (wardBounds.isValid()) {
+     map.fitBounds(wardBounds, {padding:[20,20]});
+   }
+
+   document.getElementById('boundaryStatus').textContent =
+     'Đã tải đường ranh giới phường Lái Thiêu.';
+ })
+ .catch(error => {
+   console.error(error);
+   document.getElementById('boundaryStatus').textContent =
+     'Chưa tải được ranh giới. Kiểm tra file lai-thieu.geojson đã nằm cùng thư mục với index.html chưa.';
+ });
 
 const heritageLayer=L.layerGroup().addTo(map);
 const qrLayer=L.layerGroup().addTo(map);
@@ -68,7 +125,7 @@ sites.forEach(site=>{
   <b>${site.name}</b>
   <p>Vị trí đang minh họa, cần xác minh.</p>
   <button onclick="window.open('${search}','_blank')">Tìm trên Google Maps</button>
-  <p><a href="${search}" target="_blank">Chỉ đường / xem vị trí</a></p>
+  <p><a href="${search}" target="_blank" rel="noopener">Chỉ đường / xem vị trí</a></p>
   <p>VR360: bổ sung liên kết tour khi có.</p>
  `);
 });
@@ -89,10 +146,25 @@ function showLayer(which){
  ['all','heritage','qr'].forEach(id=>{
   document.getElementById(id).classList.toggle('active',id===which);
  });
- if(which==='all'||which==='heritage')map.addLayer(heritageLayer);
+
+ if(which==='all'||which==='heritage') map.addLayer(heritageLayer);
  else map.removeLayer(heritageLayer);
- if(which==='all'||which==='qr')map.addLayer(qrLayer);
+
+ if(which==='all'||which==='qr') map.addLayer(qrLayer);
  else map.removeLayer(qrLayer);
+
+ // Luôn giữ đường ranh giới khi đổi lớp
+ if(boundaryLayer && !map.hasLayer(boundaryLayer)){
+   boundaryLayer.addTo(map);
+ }
+}
+
+function showWholeWard(){
+ if(boundaryLayer && wardBounds && wardBounds.isValid()){
+   map.fitBounds(wardBounds,{padding:[20,20]});
+ } else {
+   alert('Ranh giới đang tải hoặc chưa tải được. Thử tải lại trang nhé.');
+ }
 }
 </script>
 </body>
