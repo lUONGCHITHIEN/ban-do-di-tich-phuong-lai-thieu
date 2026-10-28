@@ -1,0 +1,99 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bản đồ số phường Lái Thiêu</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;color:#18324a;background:#f3f6fa}
+header{background:#064b87;color:white;padding:18px}
+header h2{margin:0 0 6px;font-size:22px}
+header p{margin:0;font-size:14px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;padding:12px}
+button{border:0;border-radius:9px;padding:12px 15px;background:#e2eaf3;color:#163b5c;font-weight:bold;cursor:pointer}
+button.active{background:#0878dc;color:white}
+#map{height:64vh;min-height:380px;width:100%;background:#e5edf4}
+.note{padding:12px;font-size:13px;color:#536579}
+.leaflet-popup-content{min-width:190px}
+.leaflet-popup-content button{margin-top:8px;background:#0878dc;color:white}
+</style>
+</head>
+<body>
+<header>
+<h2>BẢN ĐỒ SỐ PHƯỜNG LÁI THIÊU</h2>
+<p>Di tích lịch sử – văn hóa · Tuyến đường số · Trải nghiệm VR360</p>
+</header>
+
+<div class="toolbar">
+<button id="all" class="active" onclick="showLayer('all')">Tất cả</button>
+<button id="heritage" onclick="showLayer('heritage')">🏛 Di tích</button>
+<button id="qr" onclick="showLayer('qr')">▦ Điểm QR</button>
+</div>
+
+<div id="map"></div>
+<div class="note">
+Bản thử nghiệm. Vị trí ghim minh họa chưa phải tọa độ đã xác minh.
+Cần kiểm tra vị trí thực tế trước khi công bố.
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const map = L.map('map').setView([10.906,106.704],14);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+ maxZoom:19,
+ attribution:'© OpenStreetMap contributors'
+}).addTo(map);
+
+const heritageLayer=L.layerGroup().addTo(map);
+const qrLayer=L.layerGroup().addTo(map);
+
+const sites=[
+{name:'Miếu Bà Bình Nhâm',lat:10.906,lon:106.704},
+{name:'Miếu Mộc Tổ',lat:10.910,lon:106.708},
+{name:'Đình Bình Nhâm',lat:10.902,lon:106.710},
+{name:'Đình Phú Long',lat:10.914,lon:106.700},
+{name:'Đình Tân Thới',lat:10.899,lon:106.699},
+{name:'Đền Bình Nhâm',lat:10.907,lon:106.715}
+];
+
+sites.forEach(site=>{
+ const marker=L.marker([site.lat,site.lon]).addTo(heritageLayer);
+ const search='https://www.google.com/maps/search/?api=1&query='
+  +encodeURIComponent(site.name+' Lái Thiêu');
+ marker.bindPopup(`
+  <b>${site.name}</b>
+  <p>Vị trí đang minh họa, cần xác minh.</p>
+  <button onclick="window.open('${search}','_blank')">Tìm trên Google Maps</button>
+  <p><a href="${search}" target="_blank">Chỉ đường / xem vị trí</a></p>
+  <p>VR360: bổ sung liên kết tour khi có.</p>
+ `);
+});
+
+const qrPoints=[
+{name:'Điểm QR tuyến đường số 1',lat:10.904,lon:106.706},
+{name:'Điểm QR tuyến đường số 2',lat:10.911,lon:106.702}
+];
+
+qrPoints.forEach(point=>{
+ const marker=L.circleMarker([point.lat,point.lon],{
+  radius:9,color:'#0878dc',fillColor:'#42a5f5',fillOpacity:1
+ }).addTo(qrLayer);
+ marker.bindPopup('<b>'+point.name+'</b><p>Thay bằng vị trí QR thực tế.</p>');
+});
+
+function showLayer(which){
+ ['all','heritage','qr'].forEach(id=>{
+  document.getElementById(id).classList.toggle('active',id===which);
+ });
+ if(which==='all'||which==='heritage')map.addLayer(heritageLayer);
+ else map.removeLayer(heritageLayer);
+ if(which==='all'||which==='qr')map.addLayer(qrLayer);
+ else map.removeLayer(qrLayer);
+}
+</script>
+</body>
+</html>
