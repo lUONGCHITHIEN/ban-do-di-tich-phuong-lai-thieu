@@ -107,29 +107,60 @@ fetch('./lai-thieu.geojson')
 
 const heritageLayer=L.layerGroup().addTo(map);
 const qrLayer=L.layerGroup().addTo(map);
+fetch('./di-tich.json')
+  .then(response => {
+    if (!response.ok) throw new Error('Không tải được dữ liệu');
+    return response.json();
+  })
+  .then(sites => {
+    sites.forEach(site => {
+      const marker = L.marker([site.lat, site.lon])
+        .addTo(heritageLayer);
 
-const sites=[
-{name:'Miếu Bà Bình Nhâm',lat:10.906,lon:106.704},
-{name:'Miếu Mộc Tổ',lat:10.910,lon:106.708},
-{name:'Đình Bình Nhâm',lat:10.902,lon:106.710},
-{name:'Đình Phú Long',lat:10.914,lon:106.700},
-{name:'Đình Tân Thới',lat:10.899,lon:106.699},
-{name:'Đền Bình Nhâm',lat:10.907,lon:106.715}
-];
+      const imageHTML = site.image
+        ? `<img src="./${site.image}"
+            alt="${site.name}"
+            style="width:100%;height:155px;object-fit:cover;
+            border-radius:10px;margin-bottom:9px"
+            onerror="this.style.display='none'">`
+        : '';
 
-sites.forEach(site=>{
- const marker=L.marker([site.lat,site.lon]).addTo(heritageLayer);
- const search='https://www.google.com/maps/search/?api=1&query='
-  +encodeURIComponent(site.name+' Lái Thiêu');
- marker.bindPopup(`
-  <b>${site.name}</b>
-  <p>Vị trí đang minh họa, cần xác minh.</p>
-  <button onclick="window.open('${search}','_blank')">Tìm trên Google Maps</button>
-  <p><a href="${search}" target="_blank" rel="noopener">Chỉ đường / xem vị trí</a></p>
-  <p>VR360: bổ sung liên kết tour khi có.</p>
- `);
-});
+      const vrHTML = site.vr360
+        ? `<a href="${site.vr360}" target="_blank"
+            rel="noopener"
+            style="display:block;text-align:center;
+            background:#16834a;color:white;padding:10px;
+            border-radius:8px;text-decoration:none;margin-top:8px">
+            Tham quan 360°
+          </a>`
+        : '';
 
+      marker.bindPopup(`
+        <div style="width:230px;max-width:100%">
+          ${imageHTML}
+          <h3 style="margin:3px 0 8px;color:#064b87">
+            ${site.name}
+          </h3>
+          <p style="font-size:13px;line-height:1.5">
+            ${site.description}
+          </p>
+          <a href="${site.directions}" target="_blank"
+             rel="noopener"
+             style="display:block;text-align:center;
+             background:#0878dc;color:white;padding:10px;
+             border-radius:8px;text-decoration:none;font-weight:bold">
+             Chỉ đường
+          </a>
+          ${vrHTML}
+        </div>
+      `);
+    });
+  })
+  .catch(error => {
+    console.error(error);
+    document.getElementById('boundaryStatus').textContent =
+      'Không tải được dữ liệu di tích. Kiểm tra file di-tich.json.';
+  });
 const qrPoints=[
 {name:'Điểm QR tuyến đường số 1',lat:10.904,lon:106.706},
 {name:'Điểm QR tuyến đường số 2',lat:10.911,lon:106.702}
