@@ -114,8 +114,30 @@ fetch('./di-tich.json')
   })
   .then(sites => {
     sites.forEach(site => {
-      const marker = L.marker([site.lat, site.lon])
-        .addTo(heritageLayer);
+     const iconHTML = `
+  <div style="width:110px;text-align:center">
+    <img src="./${site.image}"
+      style="width:58px;height:58px;
+      object-fit:cover;border-radius:50%;
+      border:3px solid white;
+      box-shadow:0 2px 8px #555">
+    <div style="background:white;color:#064b87;
+      font-weight:bold;font-size:11px;
+      padding:4px 5px;border-radius:6px;
+      margin-top:3px;box-shadow:0 2px 5px #999">
+      ${site.name}
+    </div>
+  </div>
+`;
+
+const marker = L.marker([site.lat, site.lon], {
+  icon: L.divIcon({
+    className: '',
+    html: iconHTML,
+    iconSize: [110, 88],
+    iconAnchor: [55, 44]
+  })
+}).addTo(heritageLayer);
 
       const imageHTML = site.image
         ? `<img src="./${site.image}"
