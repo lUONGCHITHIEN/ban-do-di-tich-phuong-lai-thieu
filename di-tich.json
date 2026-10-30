@@ -3,7 +3,7 @@
     "name": "Đình Bình Nhâm",
     "lat": 10.904752622264654,
     "lon": 106.69788652756894,
-    "image": "images/dinh-binh-nham.jpg",
+    "image": "dinh-binh-nham.jpg",
     "description": "Đình thờ Thành Hoàng Bổn Cảnh và các bậc tiền nhân khai hoang lập làng. Tư liệu ghi đình được khởi dựng trước năm 1853 và còn lưu giữ sắc phong gốc của vua Tự Đức.",
     "directions": "https://www.google.com/maps/dir/?api=1&destination=10.904752622264654,106.69788652756894",
     "vr360": ""
@@ -12,7 +12,7 @@
     "name": "Đình Phú Long",
     "lat": 10.89547480584489,
     "lon": 106.69558230805065,
-    "image": "images/dinh-phu-long.jpg",
+    "image": "dinh-phu-long.jpg",
     "description": "Đình làng được người dân khởi dựng khoảng năm 1842, nổi bật với kiến trúc nghệ thuật truyền thống Nam Bộ và giá trị lịch sử trong hai cuộc kháng chiến. Di tích cấp quốc gia từ năm 2001.",
     "directions": "https://www.google.com/maps/dir/?api=1&destination=10.89547480584489,106.69558230805065",
     "vr360": ""
@@ -21,7 +21,7 @@
     "name": "Đình Tân Thới",
     "lat": 10.90333127703714,
     "lon": 106.70218321898099,
-    "image": "images/dinh-tan-thoi.jpg",
+    "image": "dinh-tan-thoi.jpg",
     "description": "Đình gắn với quá trình hình thành làng Tân Thới. Tư liệu ghi nhận sắc phong vua Tự Đức năm 1853 và việc xếp hạng di tích lịch sử - văn hóa cấp tỉnh năm 2022.",
     "directions": "https://www.google.com/maps/dir/?api=1&destination=10.90333127703714,106.70218321898099",
     "vr360": ""
@@ -30,7 +30,7 @@
     "name": "Đền Bình Nhâm",
     "lat": 10.919488493814224,
     "lon": 106.69425762397086,
-    "image": "images/den-binh-nham.jpg",
+    "image": "den-binh-nham.jpg",
     "description": "Địa chỉ đỏ ghi dấu sự ra đời của Chi bộ Đảng Cộng sản Bình Nhâm vào tháng 8/1930, một trong ba chi bộ Đảng đầu tiên của tỉnh Thủ Dầu Một theo tư liệu.",
     "directions": "https://www.google.com/maps/dir/?api=1&destination=10.919488493814224,106.69425762397086",
     "vr360": ""
@@ -39,7 +39,7 @@
     "name": "Miếu Mộc Tổ",
     "lat": 10.901401317667748,
     "lon": 106.69840899929397,
-    "image": "images/mieu-moc-to.jpg",
+    "image": "mieu-moc-to.jpg",
     "description": "Miếu thờ Lỗ Ban Tiên Sư, gắn với ký ức nghề mộc và các nghề thủ công mỹ nghệ ở Lái Thiêu. Tư liệu ghi miếu được xây dựng năm 1944.",
     "directions": "https://www.google.com/maps/dir/?api=1&destination=10.901401317667748,106.69840899929397",
     "vr360": ""
@@ -48,7 +48,7 @@
     "name": "Miếu Bà Bình Nhâm",
     "lat": 10.92303639018797,
     "lon": 106.69535172396658,
-    "image": "images/mieu-ba-binh-nham.jpg",
+    "image": "mieu-ba-binh-nham.jpg",
     "description": "Miếu nằm gần rạch Cầu Đò, nổi bật với bình phong trang trí hình Hổ phục và Rồng vờn mây. Tư liệu ghi nhận di tích được xếp hạng cấp tỉnh năm 2018.",
     "directions": "https://www.google.com/maps/dir/?api=1&destination=10.92303639018797,106.69535172396658",
     "vr360": ""
