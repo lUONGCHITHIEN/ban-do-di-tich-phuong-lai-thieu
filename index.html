@@ -20,6 +20,32 @@ button.active{background:#0878dc;color:white}
 .leaflet-popup-content{min-width:190px}
 .leaflet-popup-content button{margin-top:8px;background:#0878dc;color:white}
 #boundaryStatus{padding:0 12px;font-size:13px;color:#536579}
+
+/* Cửa sổ tham quan di tích */
+.tour-overlay{display:none;position:fixed;inset:0;z-index:3000;background:rgba(5,18,32,.76);padding:18px;align-items:center;justify-content:center}
+.tour-overlay.open{display:flex}
+.tour-panel{width:min(1080px,100%);max-height:94vh;overflow:auto;background:#fff;border-radius:18px;box-shadow:0 20px 70px #0008;color:#18324a}
+.tour-head{display:flex;align-items:center;gap:12px;padding:16px 20px;background:#064b87;color:#fff;position:sticky;top:0;z-index:2}
+.tour-head h2{font-size:20px;margin:0;flex:1}
+.tour-close{background:#ffffff22;color:#fff;font-size:22px;padding:7px 12px}
+.tour-body{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(280px,1fr);gap:20px;padding:20px}
+.tour-visual{min-width:0}
+.tour-image-wrap{position:relative;background:#e8eef4;border-radius:13px;overflow:hidden;min-height:250px;display:flex;align-items:center;justify-content:center}
+.tour-image{width:100%;height:clamp(250px,45vh,480px);object-fit:contain;background:#101820;display:block}
+.tour-image-caption{font-size:13px;color:#526579;margin:8px 2px 0}
+.tour-content h3{margin:0 0 10px;color:#064b87;font-size:20px}
+.tour-content p{font-size:15px;line-height:1.7;white-space:pre-line;margin:0 0 14px}
+.tour-part{border:1px solid #dce5ee;border-radius:11px;padding:12px;margin:8px 0;cursor:pointer;background:#fff}
+.tour-part.active{border-color:#0878dc;background:#edf6ff}
+.tour-part strong{display:block;font-size:14px;color:#18324a}
+.tour-part small{display:block;color:#65788b;margin-top:4px;line-height:1.45}
+.tour-controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.tour-controls button{background:#0878dc;color:white}
+.tour-controls button.secondary{background:#e2eaf3;color:#163b5c}
+.tour-status{font-size:12px;color:#65788b;margin-top:10px}
+.tour-360{margin-top:12px;border:1px dashed #9aabba;background:#f5f8fb;padding:12px;border-radius:10px;color:#526579;font-size:13px}
+@media(max-width:760px){.tour-overlay{padding:7px}.tour-panel{max-height:97vh;border-radius:13px}.tour-body{grid-template-columns:1fr;padding:12px;gap:14px}.tour-image{height:34vh;min-height:210px}.tour-head{padding:13px}.tour-head h2{font-size:17px}}
+
 </style>
 </head>
 <body>
@@ -40,6 +66,32 @@ button.active{background:#0878dc;color:white}
 <div class="note">
 Ranh giới lấy từ dữ liệu địa giới hành chính năm 2025.
 Các ghim di tích và QR hiện vẫn là vị trí minh họa, cần xác minh trước khi công bố.
+</div>
+
+
+<div id="tourOverlay" class="tour-overlay" role="dialog" aria-modal="true" aria-labelledby="tourTitle" onclick="if(event.target===this) closeTour()">
+ <section class="tour-panel">
+  <div class="tour-head"><div style="font-size:24px">🏛️</div><h2 id="tourTitle">Tham quan di tích</h2><button class="tour-close" onclick="closeTour()" aria-label="Đóng">×</button></div>
+  <div class="tour-body">
+   <div class="tour-visual">
+    <div class="tour-image-wrap"><img id="tourImage" class="tour-image" alt="Hình ảnh di tích"></div>
+    <div id="tourCaption" class="tour-image-caption"></div>
+    <div class="tour-360">🧭 <b>Không gian 360°</b><br>Đang cập nhật hình ảnh tham quan 360° cho địa điểm này.</div>
+   </div>
+   <div class="tour-content">
+    <h3 id="tourPartTitle">Giới thiệu di tích</h3>
+    <p id="tourNarrationText"></p>
+    <div id="tourParts"></div>
+    <div class="tour-controls">
+     <button id="tourPlay" onclick="toggleNarration()">▶ Nghe thuyết minh</button>
+     <button class="secondary" onclick="previousPart()">⏮ Phần trước</button>
+     <button class="secondary" onclick="nextPart()">Phần tiếp ⏭</button>
+    </div>
+    <div id="tourStatus" class="tour-status">Chọn “Nghe thuyết minh” để bắt đầu. Giọng đọc tùy thuộc giọng tiếng Việt có trên thiết bị.</div>
+    <div class="tour-controls"><button class="secondary" onclick="openDirections()">📍 Chỉ đường</button></div>
+   </div>
+  </div>
+ </section>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -139,43 +191,7 @@ const marker = L.marker([site.lat, site.lon], {
   })
 }).addTo(heritageLayer);
 
-      const imageHTML = site.image
-        ? `<img src="./${site.image}"
-            alt="${site.name}"
-            style="width:100%;height:155px;object-fit:cover;
-            border-radius:10px;margin-bottom:9px"
-            onerror="this.style.display='none'">`
-        : '';
-
-      const vrHTML = site.vr360
-        ? `<a href="${site.vr360}" target="_blank"
-            rel="noopener"
-            style="display:block;text-align:center;
-            background:#16834a;color:white;padding:10px;
-            border-radius:8px;text-decoration:none;margin-top:8px">
-            Tham quan 360°
-          </a>`
-        : '';
-
-      marker.bindPopup(`
-        <div style="width:230px;max-width:100%">
-          ${imageHTML}
-          <h3 style="margin:3px 0 8px;color:#064b87">
-            ${site.name}
-          </h3>
-          <p style="font-size:13px;line-height:1.5">
-            ${site.description}
-          </p>
-          <a href="${site.directions}" target="_blank"
-             rel="noopener"
-             style="display:block;text-align:center;
-             background:#0878dc;color:white;padding:10px;
-             border-radius:8px;text-decoration:none;font-weight:bold">
-             Chỉ đường
-          </a>
-          ${vrHTML}
-        </div>
-      `);
+       marker.on('click', () => openTour(site));
     });
   })
   .catch(error => {
@@ -183,6 +199,76 @@ const marker = L.marker([site.lat, site.lon], {
     document.getElementById('boundaryStatus').textContent =
       'Không tải được dữ liệu di tích. Kiểm tra file di-tich.json.';
   });
+
+// ===== THAM QUAN DI TÍCH + THUYẾT MINH ĐỒNG BỘ HÌNH ẢNH =====
+let currentTourSite = null;
+let currentTourParts = [];
+let currentPartIndex = 0;
+let narrationState = 'idle';
+let activeUtterance = null;
+let speechRunId = 0;
+
+// Kịch bản mẫu Đình Bình Nhâm được biên tập từ file Word người dùng cung cấp.
+// Các hình được chọn từ bộ ảnh Đình Bình Nhâm trong thư mục heritage/.
+const tourScripts = {
+ 'Đình Bình Nhâm': [
+  {title:'1. Giới thiệu chung', text:'Đình Bình Nhâm tọa lạc tại khu phố Bình Đức 1, phường Lái Thiêu, Thành phố Hồ Chí Minh. Đây là di tích lịch sử - văn hóa cấp tỉnh, được xếp hạng năm 2022 theo Quyết định số 200 ngày 18 tháng 01 năm 2022 của Ủy ban nhân dân tỉnh Bình Dương. Ngôi đình là không gian tín ngưỡng gắn bó với đời sống cộng đồng cư dân địa phương.', image:'./dinh-binh-nham-01.jpg', caption:'Toàn cảnh mặt tiền Đình Bình Nhâm'},
+  {title:'2. Lịch sử hình thành', text:'Theo các nguồn sử liệu sắc phong, đình do các thế hệ cư dân người Việt ở thôn Bình Nhan Thượng, huyện Bình An khởi dựng vào khoảng trước năm 1853 để thờ Thành Hoàng Bổn Cảnh cùng các bậc tiền nhân có công khai hoang lập làng. Ngày 29 tháng 11 năm Tự Đức thứ 5, tức ngày 08 tháng 01 năm 1853, đình được vua Tự Đức ban sắc phong gốc với danh hiệu Bảo An Chánh Trực Hựu Thiện Đôn Ngưng chi Thần.', image:'./dinh-binh-nham-02.jpg', caption:'Sắc phong vua Tự Đức ban cho Đình Bình Nhâm'},
+  {title:'3. Kiến trúc và nghệ thuật', text:'Đình Bình Nhâm mang cấu trúc nội tam ngoại quốc khép kín. Mặt tiền chánh điện được trang trí công phu bằng nghệ thuật khảm sành sứ, kết hợp dòng gốm Lái Thiêu và gốm Quảng Đông. Trên mái có các đồ án trang trí như lưỡng long chầu nguyệt, song phụng, cá chép hóa rồng cùng nhiều hình tượng truyền thống. Những chi tiết này thể hiện sự giao lưu văn hóa Việt - Hoa trên vùng đất Lái Thiêu.', image:'./dinh-binh-nham-03.jpg', caption:'Mặt tiền và nghệ thuật trang trí Đình Bình Nhâm'},
+  {title:'4. Không gian thờ tự và giá trị văn hóa', text:'Không gian thờ tự của đình gồm tiền điện, trung điện và hậu điện. Hậu điện đặt khám thờ Thành Hoàng, cùng các bàn thờ Tả ban, Hữu ban, Tiền hiền và Hậu hiền. Đình duy trì Lễ Kỳ yên vào ngày 13 và 14 tháng 11 âm lịch hằng năm. Đình Bình Nhâm không chỉ là minh chứng cho lịch sử định cư lâu dài mà còn góp phần gìn giữ đạo lý uống nước nhớ nguồn và thắt chặt tình đoàn kết cộng đồng.', image:'./dinh-binh-nham-04.jpg', caption:'Hình ảnh tư liệu và hiện vật gắn với di tích'}
+ ]
+};
+
+function openTour(site){
+ currentTourSite = site;
+ currentPartIndex = 0;
+ currentTourParts = tourScripts[site.name] || [{title:'Giới thiệu di tích',text:site.description || 'Nội dung đang được cập nhật.',image:site.image ? './'+site.image : '',caption:site.name}];
+ document.getElementById('tourTitle').textContent = site.name || 'Tham quan di tích';
+ document.getElementById('tourOverlay').classList.add('open');
+ document.body.style.overflow='hidden';
+ renderTourPart();
+ document.getElementById('tourStatus').textContent='Chọn “Nghe thuyết minh” để bắt đầu. Hình ảnh sẽ tự chuyển theo từng phần.';
+ document.getElementById('tourPlay').textContent='▶ Nghe thuyết minh';
+ narrationState='idle';
+}
+function renderTourPart(){
+ const part=currentTourParts[currentPartIndex]; if(!part)return;
+ document.getElementById('tourPartTitle').textContent=part.title;
+ document.getElementById('tourNarrationText').textContent=part.text;
+ const img=document.getElementById('tourImage');
+ img.src=part.image || (currentTourSite && currentTourSite.image ? './'+currentTourSite.image : '');
+ img.alt=(currentTourSite?.name || 'Di tích')+' - '+part.title;
+ img.onerror=()=>{img.removeAttribute('src');};
+ document.getElementById('tourCaption').textContent=part.caption || part.title;
+ document.getElementById('tourParts').innerHTML=currentTourParts.map((p,i)=>`<div class="tour-part ${i===currentPartIndex?'active':''}" onclick="selectPart(${i})"><strong>${p.title}</strong><small>${p.text.slice(0,105)}…</small></div>`).join('');
+}
+function selectPart(i){ stopNarration(); currentPartIndex=Math.max(0,Math.min(i,currentTourParts.length-1)); renderTourPart(); document.getElementById('tourStatus').textContent='Đã chọn '+currentTourParts[currentPartIndex].title+'. Bấm nghe để phát phần này.'; }
+function toggleNarration(){
+ if(!('speechSynthesis' in window)){document.getElementById('tourStatus').textContent='Trình duyệt này chưa hỗ trợ đọc văn bản. Hãy thử Chrome hoặc Edge.';return;}
+ if(narrationState==='speaking'){window.speechSynthesis.pause();narrationState='paused';document.getElementById('tourPlay').textContent='▶ Tiếp tục';document.getElementById('tourStatus').textContent='Đã tạm dừng.';return;}
+ if(narrationState==='paused'){window.speechSynthesis.resume();narrationState='speaking';document.getElementById('tourPlay').textContent='⏸ Tạm dừng';document.getElementById('tourStatus').textContent='Đang thuyết minh…';return;}
+ speakCurrentPart();
+}
+function speakCurrentPart(){
+ if(!currentTourParts.length)return;
+ window.speechSynthesis.cancel();
+ const run=++speechRunId; const part=currentTourParts[currentPartIndex];
+ const utterance=new SpeechSynthesisUtterance(part.text); activeUtterance=utterance;
+ utterance.lang='vi-VN'; utterance.rate=0.92; utterance.pitch=1;
+ const voices=window.speechSynthesis.getVoices(); const vi=voices.find(v=>v.lang && v.lang.toLowerCase().startsWith('vi'));
+ if(vi)utterance.voice=vi;
+ utterance.onstart=()=>{if(run!==speechRunId)return;narrationState='speaking';document.getElementById('tourPlay').textContent='⏸ Tạm dừng';document.getElementById('tourStatus').textContent='Đang đọc: '+part.title;};
+ utterance.onend=()=>{if(run!==speechRunId)return;if(currentPartIndex<currentTourParts.length-1){currentPartIndex++;renderTourPart();speakCurrentPart();}else{narrationState='idle';document.getElementById('tourPlay').textContent='↻ Nghe lại';document.getElementById('tourStatus').textContent='Đã kết thúc phần thuyết minh.';}};
+ utterance.onerror=(e)=>{if(run!==speechRunId)return;narrationState='idle';document.getElementById('tourPlay').textContent='▶ Nghe thuyết minh';document.getElementById('tourStatus').textContent='Không phát được giọng đọc: '+(e.error||'lỗi trình duyệt');};
+ window.speechSynthesis.speak(utterance);
+}
+function stopNarration(){speechRunId++;if('speechSynthesis'in window)window.speechSynthesis.cancel();narrationState='idle';document.getElementById('tourPlay').textContent='▶ Nghe thuyết minh';}
+function previousPart(){selectPart(currentPartIndex-1);}
+function nextPart(){selectPart(currentPartIndex+1);}
+function closeTour(){stopNarration();document.getElementById('tourOverlay').classList.remove('open');document.body.style.overflow='';currentTourSite=null;}
+function openDirections(){if(currentTourSite && currentTourSite.directions)window.open(currentTourSite.directions,'_blank','noopener');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('tourOverlay').classList.contains('open'))closeTour();});
+
 const qrPoints=[
 {name:'Điểm QR tuyến đường số 1',lat:10.904,lon:106.706},
 {name:'Điểm QR tuyến đường số 2',lat:10.911,lon:106.702}
