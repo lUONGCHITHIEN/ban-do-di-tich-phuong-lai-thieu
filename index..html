@@ -31,10 +31,14 @@ button.active{background:#0878dc;color:white}
 .tour-body{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(280px,1fr);gap:20px;padding:20px}
 .tour-visual{min-width:0}
 .tour-image-wrap{position:relative;background:#e8eef4;border-radius:13px;overflow:hidden;min-height:250px;display:flex;align-items:center;justify-content:center}
-.tour-image{width:100%;height:clamp(250px,45vh,480px);object-fit:contain;background:#101820;display:block}.tour-image::-webkit-media-controls{display:flex}
+.tour-image{width:100%;height:clamp(250px,45vh,480px);object-fit:contain;background:#101820;display:block}
+
+/* Yêu cầu trình duyệt ẩn nút toàn màn hình */
 .tour-image::-webkit-media-controls-fullscreen-button{
   display:none !important;
+  -webkit-appearance:none !important;
 }
+
 .tour-image-caption{font-size:13px;color:#526579;margin:8px 2px 0}
 .tour-content h3{margin:0 0 10px;color:#064b87;font-size:20px}
 .tour-description-card{border:1px solid #0878dc;background:#edf6ff;border-radius:12px;padding:13px 14px;color:#29435c;font-size:14px;line-height:1.62;min-height:118px;white-space:normal}
@@ -48,14 +52,22 @@ button.active{background:#0878dc;color:white}
 .tour-controls button.secondary{background:#e2eaf3;color:#163b5c}
 .tour-status{font-size:12px;color:#65788b;margin-top:10px}
 .tour-360{margin-top:12px;border:1px dashed #9aabba;background:#f5f8fb;padding:12px;border-radius:10px;color:#526579;font-size:13px}
-@media(max-width:760px){.tour-overlay{padding:7px}.tour-panel{max-height:97vh;border-radius:13px}.tour-body{grid-template-columns:1fr;padding:12px;gap:14px}.tour-image{height:34vh;min-height:210px}.tour-head{padding:13px}.tour-head h2{font-size:17px}}
 
+@media(max-width:760px){
+ .tour-overlay{padding:7px}
+ .tour-panel{max-height:97vh;border-radius:13px}
+ .tour-body{grid-template-columns:1fr;padding:12px;gap:14px}
+ .tour-image{height:34vh;min-height:210px}
+ .tour-head{padding:13px}
+ .tour-head h2{font-size:17px}
+}
 </style>
 </head>
 <body>
+
 <header>
 <h2>BẢN ĐỒ SỐ PHƯỜNG LÁI THIÊU</h2>
-<p>Di tích lịch sử – văn hóa · Tuyến đường số </p>
+<p>Di tích lịch sử – văn hóa · Tuyến đường số</p>
 </header>
 
 <div class="toolbar">
@@ -72,13 +84,29 @@ Ranh giới lấy từ dữ liệu địa giới hành chính năm 2025.
 Các ghim di tích và QR hiện vẫn là vị trí minh họa, cần xác minh trước khi công bố.
 </div>
 
-
 <div id="tourOverlay" class="tour-overlay" role="dialog" aria-modal="true" aria-labelledby="tourTitle" onclick="if(event.target===this) closeTour()">
  <section class="tour-panel">
-  <div class="tour-head"><div style="font-size:24px">🏛️</div><h2 id="tourTitle">Tham quan di tích</h2><button class="tour-close" onclick="closeTour()" aria-label="Đóng">×</button></div>
+  <div class="tour-head">
+   <div style="font-size:24px">🏛️</div>
+   <h2 id="tourTitle">Tham quan di tích</h2>
+   <button class="tour-close" onclick="closeTour()" aria-label="Đóng">×</button>
+  </div>
   <div class="tour-body">
    <div class="tour-visual">
-    <div class="tour-image-wrap"><video id="tourVideo" class="tour-image" controls autoplay muted playsinline preload="metadata" aria-label="Video giới thiệu di tích"></video></div>
+    <div class="tour-image-wrap">
+     <video
+       id="tourVideo"
+       class="tour-image"
+       controls
+       controlsList="nofullscreen"
+       disablepictureinpicture
+       autoplay
+       muted
+       playsinline
+       preload="metadata"
+       aria-label="Video giới thiệu di tích">
+     </video>
+    </div>
     <div id="tourCaption" class="tour-image-caption"></div>
     <div class="tour-360">🧭 <b>Không gian 360°</b><br>Đang cập nhật hình ảnh tham quan 360° cho địa điểm này.</div>
     <audio id="tourNarrationAudio" preload="none"></audio>
@@ -86,7 +114,9 @@ Các ghim di tích và QR hiện vẫn là vị trí minh họa, cần xác minh
    <div class="tour-content">
     <h3>Giới thiệu di tích</h3>
     <div id="tourDescription" class="tour-description-card"></div>
-    <div class="tour-controls"><button class="secondary" onclick="openDirections()">📍 Chỉ đường</button></div>
+    <div class="tour-controls">
+     <button class="secondary" onclick="openDirections()">📍 Chỉ đường</button>
+    </div>
    </div>
   </div>
  </section>
@@ -111,7 +141,6 @@ fetch('./lai-thieu.geojson')
    return response.json();
  })
  .then(data => {
-   // Chỉ lấy đối tượng đúng tên phường Lái Thiêu
    const wardFeatures = (data.features || []).filter(feature =>
      feature.properties &&
      feature.properties.a03_ten === 'Phường Lái Thiêu'
@@ -157,6 +186,7 @@ fetch('./lai-thieu.geojson')
 
 const heritageLayer=L.layerGroup().addTo(map);
 const qrLayer=L.layerGroup().addTo(map);
+
 fetch('./di-tich.json')
   .then(response => {
     if (!response.ok) throw new Error('Không tải được dữ liệu');
@@ -198,7 +228,7 @@ const marker = L.marker([site.lat, site.lon], {
       'Không tải được dữ liệu di tích. Kiểm tra file di-tich.json.';
   });
 
-// ===== CỬA SỔ DI TÍCH: VIDEO TỰ PHÁT, THUYẾT MINH FILE RIÊNG BỔ SUNG SAU =====
+// Cửa sổ tham quan di tích
 let currentTourSite = null;
 
 function openTour(site){
@@ -207,26 +237,34 @@ function openTour(site){
  document.getElementById('tourDescription').textContent = site.description || 'Thông tin di tích đang được cập nhật.';
  document.getElementById('tourOverlay').classList.add('open');
  document.body.style.overflow='hidden';
+
  const video=document.getElementById('tourVideo');
  const nextSrc=site.video ? './'+site.video : '';
+
  video.pause();
  video.removeAttribute('src');
  video.load();
+
  if(nextSrc){
    video.src=nextSrc;
-   video.muted=true; // tự phát ổn định trên trình duyệt; sẽ ghép file thuyết minh riêng sau
+   video.muted=true;
    video.playsInline=true;
    video.load();
    video.play().catch(()=>{
      document.getElementById('tourCaption').textContent='Nếu video chưa tự chạy, nhấn nút phát trên khung hình.';
    });
  }
+
  const audio=document.getElementById('tourNarrationAudio');
- audio.pause(); audio.removeAttribute('src'); audio.load();
+ audio.pause();
+ audio.removeAttribute('src');
+ audio.load();
+
  if(site.narrationAudio){
    audio.src='./'+site.narrationAudio;
    audio.play().catch(()=>{});
  }
+
  document.getElementById('tourCaption').textContent=site.name+' – Video giới thiệu di tích';
 }
 
@@ -235,30 +273,50 @@ function closeTour(){
  video.pause();
  video.removeAttribute('src');
  video.load();
+
  const audio=document.getElementById('tourNarrationAudio');
- if(audio){audio.pause();audio.removeAttribute('src');audio.load();}
+ if(audio){
+   audio.pause();
+   audio.removeAttribute('src');
+   audio.load();
+ }
+
  document.getElementById('tourOverlay').classList.remove('open');
  document.body.style.overflow='';
  currentTourSite=null;
 }
-function openDirections(){if(currentTourSite && currentTourSite.directions)window.open(currentTourSite.directions,'_blank','noopener');}
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('tourOverlay').classList.contains('open'))closeTour();});
+
+function openDirections(){
+ if(currentTourSite && currentTourSite.directions){
+   window.open(currentTourSite.directions,'_blank','noopener');
+ }
+}
+
+document.addEventListener('keydown',e=>{
+ if(e.key==='Escape' && document.getElementById('tourOverlay').classList.contains('open')){
+   closeTour();
+ }
+});
 
 const qrPoints=[
-{name:'Điểm QR tuyến đường số 1',lat:10.904,lon:106.706},
-{name:'Điểm QR tuyến đường số 2',lat:10.911,lon:106.702}
+ {name:'Điểm QR tuyến đường số 1',lat:10.904,lon:106.706},
+ {name:'Điểm QR tuyến đường số 2',lat:10.911,lon:106.702}
 ];
 
 qrPoints.forEach(point=>{
  const marker=L.circleMarker([point.lat,point.lon],{
-  radius:9,color:'#0878dc',fillColor:'#42a5f5',fillOpacity:1
+   radius:9,
+   color:'#0878dc',
+   fillColor:'#42a5f5',
+   fillOpacity:1
  }).addTo(qrLayer);
+
  marker.bindPopup('<b>'+point.name+'</b><p>Thay bằng vị trí QR thực tế.</p>');
 });
 
 function showLayer(which){
  ['all','heritage','qr'].forEach(id=>{
-  document.getElementById(id).classList.toggle('active',id===which);
+   document.getElementById(id).classList.toggle('active',id===which);
  });
 
  if(which==='all'||which==='heritage') map.addLayer(heritageLayer);
@@ -267,7 +325,6 @@ function showLayer(which){
  if(which==='all'||which==='qr') map.addLayer(qrLayer);
  else map.removeLayer(qrLayer);
 
- // Luôn giữ đường ranh giới khi đổi lớp
  if(boundaryLayer && !map.hasLayer(boundaryLayer)){
    boundaryLayer.addTo(map);
  }
