@@ -1,17 +1,13 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Bản đồ số phường Lái Thiêu</title>
-
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
 <style>
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
@@ -26,15 +22,8 @@ header {
   padding: 18px;
 }
 
-header h2 {
-  margin: 0 0 6px;
-  font-size: 22px;
-}
-
-header p {
-  margin: 0;
-  font-size: 14px;
-}
+header h2 { margin: 0 0 6px; font-size: 22px; }
+header p { margin: 0; font-size: 14px; }
 
 .toolbar {
   display: flex;
@@ -71,9 +60,7 @@ button.active {
   color: #536579;
 }
 
-.leaflet-popup-content {
-  min-width: 190px;
-}
+.leaflet-popup-content { min-width: 190px; }
 
 .leaflet-popup-content button {
   margin-top: 8px;
@@ -87,9 +74,7 @@ button.active {
   color: #536579;
 }
 
-/* ================================
-   CỬA SỔ THAM QUAN DI TÍCH
-================================ */
+/* CỬA SỔ THAM QUAN DI TÍCH */
 
 .tour-overlay {
   display: none;
@@ -102,9 +87,7 @@ button.active {
   justify-content: center;
 }
 
-.tour-overlay.open {
-  display: flex;
-}
+.tour-overlay.open { display: flex; }
 
 .tour-panel {
   width: min(1080px,100%);
@@ -148,13 +131,9 @@ button.active {
   padding: 20px;
 }
 
-.tour-visual {
-  min-width: 0;
-}
+.tour-visual { min-width: 0; }
 
-/* ================================
-   VIDEO VÀ THANH ĐIỀU KHIỂN RIÊNG
-================================ */
+/* VIDEO */
 
 .tour-image-wrap {
   position: relative;
@@ -170,9 +149,8 @@ button.active {
   object-fit: contain;
   background: #101820;
   display: block;
+  max-width: 100%;
 }
-
-/* Không dùng controls mặc định của trình duyệt */
 
 .custom-video-controls {
   display: flex;
@@ -194,9 +172,7 @@ button.active {
   min-width: 32px;
 }
 
-.custom-video-controls button:hover {
-  color: #61b5ff;
-}
+.custom-video-controls button:hover { color: #61b5ff; }
 
 .custom-video-controls input[type="range"] {
   flex: 1;
@@ -217,9 +193,7 @@ button.active {
   margin: 8px 2px 0;
 }
 
-/* ================================
-   THÔNG TIN DI TÍCH
-================================ */
+/* THÔNG TIN DI TÍCH */
 
 .tour-content h3 {
   margin: 0 0 10px;
@@ -239,9 +213,7 @@ button.active {
   white-space: normal;
 }
 
-.tour-description-card p {
-  margin: 0;
-}
+.tour-description-card p { margin: 0; }
 
 .tour-controls {
   display: flex;
@@ -276,12 +248,10 @@ button.active {
   font-size: 13px;
 }
 
-/* Giao diện điện thoại */
+/* ĐIỆN THOẠI */
 
 @media(max-width:760px) {
-  .tour-overlay {
-    padding: 7px;
-  }
+  .tour-overlay { padding: 7px; }
 
   .tour-panel {
     max-height: 97vh;
@@ -299,22 +269,15 @@ button.active {
     min-height: 210px;
   }
 
-  .tour-head {
-    padding: 13px;
-  }
-
-  .tour-head h2 {
-    font-size: 17px;
-  }
+  .tour-head { padding: 13px; }
+  .tour-head h2 { font-size: 17px; }
 
   .custom-video-controls {
     gap: 5px;
     padding: 7px;
   }
 
-  .custom-video-controls span {
-    font-size: 11px;
-  }
+  .custom-video-controls span { font-size: 11px; }
 }
 </style>
 </head>
@@ -366,8 +329,6 @@ button.active {
 
       <div class="tour-visual">
 
-        <!-- VIDEO KHÔNG DÙNG CONTROLS MẶC ĐỊNH -->
-
         <div class="tour-image-wrap">
 
           <video
@@ -376,11 +337,13 @@ button.active {
             autoplay
             muted
             playsinline
+            webkit-playsinline
+            x5-playsinline
+            disablepictureinpicture
+            controlslist="nofullscreen noremoteplayback"
             preload="metadata"
             aria-label="Video giới thiệu di tích">
           </video>
-
-          <!-- THANH ĐIỀU KHIỂN TỰ THIẾT KẾ -->
 
           <div class="custom-video-controls">
 
@@ -444,10 +407,93 @@ button.active {
 
 const map = L.map('map').setView([10.906,106.704],14);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-  maxZoom:19,
-  attribution:'© OpenStreetMap contributors'
-}).addTo(map);
+/* NỀN BẢN ĐỒ: TỰ CHUYỂN NGUỒN KHI TILE BỊ LỖI */
+
+const tileSources = [
+  {
+    name: 'OpenStreetMap',
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    options: {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap contributors'
+    }
+  },
+  {
+    name: 'CARTO',
+    url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    options: {
+      maxZoom: 20,
+      subdomains: 'abcd',
+      attribution: '© OpenStreetMap contributors © CARTO'
+    }
+  },
+  {
+    name: 'Esri',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+    options: {
+      maxZoom: 19,
+      attribution: 'Tiles © Esri'
+    }
+  }
+];
+
+let currentTileLayer = null;
+let tileErrorCount = 0;
+let switchingTileSource = false;
+
+function loadTileSource(index) {
+
+  if (index >= tileSources.length) {
+    document.getElementById('boundaryStatus').textContent =
+      'Không tải được nền bản đồ từ các máy chủ. Vui lòng kiểm tra kết nối mạng hoặc quyền truy cập bản đồ.';
+    return;
+  }
+
+  tileErrorCount = 0;
+  switchingTileSource = false;
+
+  if (currentTileLayer) {
+    map.removeLayer(currentTileLayer);
+  }
+
+  const source = tileSources[index];
+
+  currentTileLayer = L.tileLayer(source.url, source.options);
+
+  currentTileLayer.on('tileerror', function() {
+
+    tileErrorCount++;
+
+    if (tileErrorCount >= 6 && !switchingTileSource) {
+
+      switchingTileSource = true;
+
+      console.warn(
+        'Nguồn ' + source.name +
+        ' bị lỗi. Đang thử nguồn bản đồ khác.'
+      );
+
+      loadTileSource(index + 1);
+    }
+
+  });
+
+  currentTileLayer.addTo(map);
+
+  console.log('Đang tải nền bản đồ: ' + source.name);
+}
+
+loadTileSource(0);
+
+/* Cập nhật kích thước bản đồ */
+
+window.addEventListener('load', () => {
+  setTimeout(() => map.invalidateSize(true), 300);
+});
+
+window.addEventListener('resize', () => {
+  map.invalidateSize(true);
+});
 
 
 /* ================================
@@ -736,6 +782,14 @@ function openTour(site) {
   timeText.textContent = '0:00 / 0:00';
 
   player.muted = true;
+  player.controls = false;
+  player.playsInline = true;
+
+  player.setAttribute('playsinline', '');
+  player.setAttribute('webkit-playsinline', '');
+  player.setAttribute('x5-playsinline', '');
+  player.setAttribute('disablepictureinpicture', '');
+
   muteBtn.textContent = '🔇';
   playBtn.textContent = '▶';
 
