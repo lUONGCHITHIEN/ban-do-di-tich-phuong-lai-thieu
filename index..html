@@ -1,958 +1,284 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Bản đồ số phường Lái Thiêu</title>
-
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-
 <style>
-* {
-  box-sizing: border-box;
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;color:#18324a;background:#f3f6fa}
+header{background:#064b87;color:white;padding:18px}
+header h2{margin:0 0 6px;font-size:22px}
+header p{margin:0;font-size:14px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;padding:12px}
+button{border:0;border-radius:9px;padding:12px 15px;background:#e2eaf3;color:#163b5c;font-weight:bold;cursor:pointer}
+button.active{background:#0878dc;color:white}
+#map{height:70vh;min-height:420px;width:100%;background:#e5edf4}
+.note{padding:12px;font-size:13px;color:#536579}
+.leaflet-popup-content{min-width:190px}
+.leaflet-popup-content button{margin-top:8px;background:#0878dc;color:white}
+#boundaryStatus{padding:0 12px;font-size:13px;color:#536579}
+
+/* Cửa sổ tham quan di tích */
+.tour-overlay{display:none;position:fixed;inset:0;z-index:3000;background:rgba(5,18,32,.76);padding:18px;align-items:center;justify-content:center}
+.tour-overlay.open{display:flex}
+.tour-panel{width:min(1080px,100%);max-height:94vh;overflow:auto;background:#fff;border-radius:18px;box-shadow:0 20px 70px #0008;color:#18324a}
+.tour-head{display:flex;align-items:center;gap:12px;padding:16px 20px;background:#064b87;color:#fff;position:sticky;top:0;z-index:2}
+.tour-head h2{font-size:20px;margin:0;flex:1}
+.tour-close{background:#ffffff22;color:#fff;font-size:22px;padding:7px 12px}
+.tour-body{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(280px,1fr);gap:20px;padding:20px}
+.tour-visual{min-width:0}
+.tour-image-wrap{position:relative;background:#e8eef4;border-radius:13px;overflow:hidden;min-height:250px;display:flex;align-items:center;justify-content:center}
+.tour-image{width:100%;height:clamp(250px,45vh,480px);object-fit:contain;background:#101820;display:block}.tour-image::-webkit-media-controls{display:flex}
+.tour-image::-webkit-media-controls-fullscreen-button{
+  display:none !important;
 }
+.tour-image-caption{font-size:13px;color:#526579;margin:8px 2px 0}
+.tour-content h3{margin:0 0 10px;color:#064b87;font-size:20px}
+.tour-description-card{border:1px solid #0878dc;background:#edf6ff;border-radius:12px;padding:13px 14px;color:#29435c;font-size:14px;line-height:1.62;min-height:118px;white-space:normal}
+.tour-description-card p{margin:0}
+.tour-part{border:1px solid #dce5ee;border-radius:11px;padding:12px;margin:8px 0;cursor:pointer;background:#fff}
+.tour-part.active{border-color:#0878dc;background:#edf6ff}
+.tour-part strong{display:block;font-size:14px;color:#18324a}
+.tour-part small{display:block;color:#65788b;margin-top:4px;line-height:1.45}
+.tour-controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.tour-controls button{background:#0878dc;color:white}
+.tour-controls button.secondary{background:#e2eaf3;color:#163b5c}
+.tour-status{font-size:12px;color:#65788b;margin-top:10px}
+.tour-360{margin-top:12px;border:1px dashed #9aabba;background:#f5f8fb;padding:12px;border-radius:10px;color:#526579;font-size:13px}
+@media(max-width:760px){.tour-overlay{padding:7px}.tour-panel{max-height:97vh;border-radius:13px}.tour-body{grid-template-columns:1fr;padding:12px;gap:14px}.tour-image{height:34vh;min-height:210px}.tour-head{padding:13px}.tour-head h2{font-size:17px}}
 
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  color: #18324a;
-  background: #f3f6fa;
-}
-
-header {
-  background: #064b87;
-  color: white;
-  padding: 18px;
-}
-
-header h2 {
-  margin: 0 0 6px;
-  font-size: 22px;
-}
-
-header p {
-  margin: 0;
-  font-size: 14px;
-}
-
-.toolbar {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  padding: 12px;
-}
-
-button {
-  border: 0;
-  border-radius: 9px;
-  padding: 12px 15px;
-  background: #e2eaf3;
-  color: #163b5c;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-button.active {
-  background: #0878dc;
-  color: white;
-}
-
-#map {
-  height: 70vh;
-  min-height: 420px;
-  width: 100%;
-  background: #e5edf4;
-}
-
-.note {
-  padding: 12px;
-  font-size: 13px;
-  color: #536579;
-}
-
-.leaflet-popup-content {
-  min-width: 190px;
-}
-
-.leaflet-popup-content button {
-  margin-top: 8px;
-  background: #0878dc;
-  color: white;
-}
-
-#boundaryStatus {
-  padding: 0 12px;
-  font-size: 13px;
-  color: #536579;
-}
-
-/* ================================
-   CỬA SỔ THAM QUAN DI TÍCH
-================================ */
-
-.tour-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 3000;
-  background: rgba(5,18,32,.76);
-  padding: 18px;
-  align-items: center;
-  justify-content: center;
-}
-
-.tour-overlay.open {
-  display: flex;
-}
-
-.tour-panel {
-  width: min(1080px,100%);
-  max-height: 94vh;
-  overflow: auto;
-  background: #fff;
-  border-radius: 18px;
-  box-shadow: 0 20px 70px #0008;
-  color: #18324a;
-}
-
-.tour-head {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 20px;
-  background: #064b87;
-  color: #fff;
-  position: sticky;
-  top: 0;
-  z-index: 2;
-}
-
-.tour-head h2 {
-  font-size: 20px;
-  margin: 0;
-  flex: 1;
-}
-
-.tour-close {
-  background: #ffffff22;
-  color: #fff;
-  font-size: 22px;
-  padding: 7px 12px;
-}
-
-.tour-body {
-  display: grid;
-  grid-template-columns: minmax(0,1.45fr) minmax(280px,1fr);
-  gap: 20px;
-  padding: 20px;
-}
-
-.tour-visual {
-  min-width: 0;
-}
-
-/* ================================
-   VIDEO VÀ THANH ĐIỀU KHIỂN RIÊNG
-================================ */
-
-.tour-image-wrap {
-  position: relative;
-  background: #101820;
-  border-radius: 13px;
-  overflow: hidden;
-  width: 100%;
-}
-
-.tour-image {
-  width: 100%;
-  height: clamp(250px,45vh,480px);
-  object-fit: contain;
-  background: #101820;
-  display: block;
-}
-
-/* Không dùng controls mặc định của trình duyệt */
-
-.custom-video-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 12px;
-  background: #101820;
-  color: white;
-  width: 100%;
-}
-
-.custom-video-controls button {
-  background: transparent;
-  color: white;
-  border: 0;
-  padding: 5px 7px;
-  cursor: pointer;
-  font-size: 17px;
-  min-width: 32px;
-}
-
-.custom-video-controls button:hover {
-  color: #61b5ff;
-}
-
-.custom-video-controls input[type="range"] {
-  flex: 1;
-  min-width: 35px;
-  accent-color: #1687ed;
-  cursor: pointer;
-}
-
-.custom-video-controls span {
-  font-size: 12px;
-  white-space: nowrap;
-  color: white;
-}
-
-.tour-image-caption {
-  font-size: 13px;
-  color: #526579;
-  margin: 8px 2px 0;
-}
-
-/* ================================
-   THÔNG TIN DI TÍCH
-================================ */
-
-.tour-content h3 {
-  margin: 0 0 10px;
-  color: #064b87;
-  font-size: 20px;
-}
-
-.tour-description-card {
-  border: 1px solid #0878dc;
-  background: #edf6ff;
-  border-radius: 12px;
-  padding: 13px 14px;
-  color: #29435c;
-  font-size: 14px;
-  line-height: 1.62;
-  min-height: 118px;
-  white-space: normal;
-}
-
-.tour-description-card p {
-  margin: 0;
-}
-
-.tour-controls {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 14px;
-}
-
-.tour-controls button {
-  background: #0878dc;
-  color: white;
-}
-
-.tour-controls button.secondary {
-  background: #e2eaf3;
-  color: #163b5c;
-}
-
-.tour-status {
-  font-size: 12px;
-  color: #65788b;
-  margin-top: 10px;
-}
-
-.tour-360 {
-  margin-top: 12px;
-  border: 1px dashed #9aabba;
-  background: #f5f8fb;
-  padding: 12px;
-  border-radius: 10px;
-  color: #526579;
-  font-size: 13px;
-}
-
-/* Giao diện điện thoại */
-
-@media(max-width:760px) {
-  .tour-overlay {
-    padding: 7px;
-  }
-
-  .tour-panel {
-    max-height: 97vh;
-    border-radius: 13px;
-  }
-
-  .tour-body {
-    grid-template-columns: 1fr;
-    padding: 12px;
-    gap: 14px;
-  }
-
-  .tour-image {
-    height: 34vh;
-    min-height: 210px;
-  }
-
-  .tour-head {
-    padding: 13px;
-  }
-
-  .tour-head h2 {
-    font-size: 17px;
-  }
-
-  .custom-video-controls {
-    gap: 5px;
-    padding: 7px;
-  }
-
-  .custom-video-controls span {
-    font-size: 11px;
-  }
-}
 </style>
 </head>
-
 <body>
-
 <header>
-  <h2>BẢN ĐỒ SỐ PHƯỜNG LÁI THIÊU</h2>
-  <p>Di tích lịch sử – văn hóa · Tuyến đường số</p>
+<h2>BẢN ĐỒ SỐ PHƯỜNG LÁI THIÊU</h2>
+<p>Di tích lịch sử – văn hóa · Tuyến đường số </p>
 </header>
 
 <div class="toolbar">
-  <button id="all" class="active" onclick="showLayer('all')">Tất cả</button>
-  <button id="heritage" onclick="showLayer('heritage')">🏛 Di tích</button>
-  <button id="qr" onclick="showLayer('qr')">▦ Điểm QR</button>
-  <button onclick="showWholeWard()">📍 Toàn cảnh phường</button>
+<button id="all" class="active" onclick="showLayer('all')">Tất cả</button>
+<button id="heritage" onclick="showLayer('heritage')">🏛 Di tích</button>
+<button id="qr" onclick="showLayer('qr')">▦ Điểm QR</button>
+<button onclick="showWholeWard()">📍 Toàn cảnh phường</button>
 </div>
 
 <div id="map"></div>
-
-<div id="boundaryStatus">
-  Đang tải ranh giới phường Lái Thiêu...
-</div>
-
+<div id="boundaryStatus">Đang tải ranh giới phường Lái Thiêu...</div>
 <div class="note">
-  Ranh giới lấy từ dữ liệu địa giới hành chính năm 2025.
-  Các ghim di tích và QR hiện vẫn là vị trí minh họa, cần xác minh trước khi công bố.
+Ranh giới lấy từ dữ liệu địa giới hành chính năm 2025.
+Các ghim di tích và QR hiện vẫn là vị trí minh họa, cần xác minh trước khi công bố.
 </div>
 
-<!-- CỬA SỔ THAM QUAN -->
 
-<div
-  id="tourOverlay"
-  class="tour-overlay"
-  role="dialog"
-  aria-modal="true"
-  aria-labelledby="tourTitle"
-  onclick="if(event.target===this) closeTour()">
-
-  <section class="tour-panel">
-
-    <div class="tour-head">
-      <div style="font-size:24px">🏛️</div>
-      <h2 id="tourTitle">Tham quan di tích</h2>
-      <button class="tour-close" onclick="closeTour()" aria-label="Đóng">×</button>
-    </div>
-
-    <div class="tour-body">
-
-      <div class="tour-visual">
-
-        <!-- VIDEO KHÔNG DÙNG CONTROLS MẶC ĐỊNH -->
-
-        <div class="tour-image-wrap">
-
-          <video
-            id="tourVideo"
-            class="tour-image"
-            autoplay
-            muted
-            playsinline
-            preload="metadata"
-            aria-label="Video giới thiệu di tích">
-          </video>
-
-          <!-- THANH ĐIỀU KHIỂN TỰ THIẾT KẾ -->
-
-          <div class="custom-video-controls">
-
-            <button type="button" id="videoPlay" title="Phát hoặc tạm dừng">
-              ▶
-            </button>
-
-            <input
-              type="range"
-              id="videoSeek"
-              min="0"
-              max="100"
-              value="0"
-              step="0.1"
-              title="Tua video">
-
-            <span id="videoTime">0:00 / 0:00</span>
-
-            <button type="button" id="videoMute" title="Bật hoặc tắt âm thanh">
-              🔇
-            </button>
-
-          </div>
-        </div>
-
-        <div id="tourCaption" class="tour-image-caption"></div>
-
-        <div class="tour-360">
-          🧭 <b>Không gian 360°</b><br>
-          Đang cập nhật hình ảnh tham quan 360° cho địa điểm này.
-        </div>
-
-        <audio id="tourNarrationAudio" preload="none"></audio>
-
-      </div>
-
-      <div class="tour-content">
-
-        <h3>Giới thiệu di tích</h3>
-
-        <div id="tourDescription" class="tour-description-card"></div>
-
-        <div class="tour-controls">
-          <button class="secondary" onclick="openDirections()">
-            📍 Chỉ đường
-          </button>
-        </div>
-
-      </div>
-    </div>
-  </section>
+<div id="tourOverlay" class="tour-overlay" role="dialog" aria-modal="true" aria-labelledby="tourTitle" onclick="if(event.target===this) closeTour()">
+ <section class="tour-panel">
+  <div class="tour-head"><div style="font-size:24px">🏛️</div><h2 id="tourTitle">Tham quan di tích</h2><button class="tour-close" onclick="closeTour()" aria-label="Đóng">×</button></div>
+  <div class="tour-body">
+   <div class="tour-visual">
+    <div class="tour-image-wrap"><video id="tourVideo" class="tour-image" controls autoplay muted playsinline preload="metadata" aria-label="Video giới thiệu di tích"></video></div>
+    <div id="tourCaption" class="tour-image-caption"></div>
+    <div class="tour-360">🧭 <b>Không gian 360°</b><br>Đang cập nhật hình ảnh tham quan 360° cho địa điểm này.</div>
+    <audio id="tourNarrationAudio" preload="none"></audio>
+   </div>
+   <div class="tour-content">
+    <h3>Giới thiệu di tích</h3>
+    <div id="tourDescription" class="tour-description-card"></div>
+    <div class="tour-controls"><button class="secondary" onclick="openDirections()">📍 Chỉ đường</button></div>
+   </div>
+  </div>
+ </section>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
 <script>
-
-/* ================================
-   KHỞI TẠO BẢN ĐỒ
-================================ */
-
 const map = L.map('map').setView([10.906,106.704],14);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-  maxZoom:19,
-  attribution:'© OpenStreetMap contributors'
+ maxZoom:19,
+ attribution:'© OpenStreetMap contributors'
 }).addTo(map);
 
-
-/* ================================
-   RANH GIỚI PHƯỜNG LÁI THIÊU
-================================ */
-
+// Ranh giới hành chính phường Lái Thiêu
 let boundaryLayer = null;
 let wardBounds = null;
 
 fetch('./lai-thieu.geojson')
-  .then(response => {
-    if (!response.ok) {
-      throw new Error('Không tải được file GeoJSON');
-    }
-    return response.json();
-  })
-  .then(data => {
+ .then(response => {
+   if (!response.ok) throw new Error('Không tải được file GeoJSON');
+   return response.json();
+ })
+ .then(data => {
+   // Chỉ lấy đối tượng đúng tên phường Lái Thiêu
+   const wardFeatures = (data.features || []).filter(feature =>
+     feature.properties &&
+     feature.properties.a03_ten === 'Phường Lái Thiêu'
+   );
 
-    const wardFeatures = (data.features || []).filter(feature =>
-      feature.properties &&
-      feature.properties.a03_ten === 'Phường Lái Thiêu'
-    );
+   if (!wardFeatures.length) {
+     throw new Error('Không tìm thấy đối tượng Phường Lái Thiêu');
+   }
 
-    if (!wardFeatures.length) {
-      throw new Error('Không tìm thấy đối tượng Phường Lái Thiêu');
-    }
+   boundaryLayer = L.geoJSON(wardFeatures, {
+     style: {
+       color: '#ffcc00',
+       weight: 4,
+       opacity: 1,
+       fillColor: '#7c4dff',
+       fillOpacity: 0.13
+     },
+     onEachFeature: (feature, layer) => {
+       layer.bindPopup(
+         '<b>Phường Lái Thiêu</b><br>' +
+         'Diện tích: ' +
+         (feature.properties.a07_dt || 'Chưa có') +
+         ' km²<br>' +
+         'Địa giới hành chính năm 2025'
+       );
+     }
+   }).addTo(map);
 
-    boundaryLayer = L.geoJSON(wardFeatures, {
+   wardBounds = boundaryLayer.getBounds();
 
-      style: {
-        color: '#ffcc00',
-        weight: 4,
-        opacity: 1,
-        fillColor: '#7c4dff',
-        fillOpacity: 0.13
-      },
+   if (wardBounds.isValid()) {
+     map.fitBounds(wardBounds, {padding:[20,20]});
+   }
 
-      onEachFeature: (feature, layer) => {
-        layer.bindPopup(
-          '<b>Phường Lái Thiêu</b><br>' +
-          'Diện tích: ' +
-          (feature.properties.a07_dt || 'Chưa có') +
-          ' km²<br>' +
-          'Địa giới hành chính năm 2025'
-        );
-      }
+   document.getElementById('boundaryStatus').textContent =
+     'Đã tải đường ranh giới phường Lái Thiêu.';
+ })
+ .catch(error => {
+   console.error(error);
+   document.getElementById('boundaryStatus').textContent =
+     'Chưa tải được ranh giới. Kiểm tra file lai-thieu.geojson đã nằm cùng thư mục với index.html chưa.';
+ });
 
-    }).addTo(map);
-
-    wardBounds = boundaryLayer.getBounds();
-
-    if (wardBounds.isValid()) {
-      map.fitBounds(wardBounds, {padding:[20,20]});
-    }
-
-    document.getElementById('boundaryStatus').textContent =
-      'Đã tải đường ranh giới phường Lái Thiêu.';
-
-  })
-  .catch(error => {
-    console.error(error);
-
-    document.getElementById('boundaryStatus').textContent =
-      'Chưa tải được ranh giới. Kiểm tra file lai-thieu.geojson đã nằm cùng thư mục với index.html chưa.';
-  });
-
-
-/* ================================
-   TẢI DANH SÁCH DI TÍCH
-================================ */
-
-const heritageLayer = L.layerGroup().addTo(map);
-const qrLayer = L.layerGroup().addTo(map);
-
+const heritageLayer=L.layerGroup().addTo(map);
+const qrLayer=L.layerGroup().addTo(map);
 fetch('./di-tich.json')
   .then(response => {
-    if (!response.ok) {
-      throw new Error('Không tải được dữ liệu');
-    }
+    if (!response.ok) throw new Error('Không tải được dữ liệu');
     return response.json();
   })
   .then(sites => {
-
     sites.forEach(site => {
+     const iconHTML = `
+  <div style="width:110px;text-align:center">
+    <img src="./${site.image}"
+      style="width:58px;height:58px;
+      object-fit:cover;border-radius:50%;
+      border:3px solid white;
+      box-shadow:0 2px 8px #555">
+    <div style="background:white;color:#064b87;
+      font-weight:bold;font-size:11px;
+      padding:4px 5px;border-radius:6px;
+      margin-top:3px;box-shadow:0 2px 5px #999">
+      ${site.name}
+    </div>
+  </div>
+`;
 
-      const iconHTML = `
-        <div style="width:110px;text-align:center">
+const marker = L.marker([site.lat, site.lon], {
+  icon: L.divIcon({
+    className: '',
+    html: iconHTML,
+    iconSize: [110, 88],
+    iconAnchor: [55, 44]
+  })
+}).addTo(heritageLayer);
 
-          <img src="./${site.image}"
-            style="
-              width:58px;
-              height:58px;
-              object-fit:cover;
-              border-radius:50%;
-              border:3px solid white;
-              box-shadow:0 2px 8px #555
-            ">
-
-          <div style="
-            background:white;
-            color:#064b87;
-            font-weight:bold;
-            font-size:11px;
-            padding:4px 5px;
-            border-radius:6px;
-            margin-top:3px;
-            box-shadow:0 2px 5px #999
-          ">
-            ${site.name}
-          </div>
-
-        </div>
-      `;
-
-      const marker = L.marker([site.lat, site.lon], {
-
-        icon: L.divIcon({
-          className: '',
-          html: iconHTML,
-          iconSize: [110, 88],
-          iconAnchor: [55, 44]
-        })
-
-      }).addTo(heritageLayer);
-
-      marker.on('click', () => openTour(site));
-
+       marker.on('click', () => openTour(site));
     });
-
   })
   .catch(error => {
     console.error(error);
-
     document.getElementById('boundaryStatus').textContent =
       'Không tải được dữ liệu di tích. Kiểm tra file di-tich.json.';
   });
 
-
-/* ================================
-   ĐIỀU KHIỂN VIDEO RIÊNG
-================================ */
-
-const player = document.getElementById('tourVideo');
-const playBtn = document.getElementById('videoPlay');
-const muteBtn = document.getElementById('videoMute');
-const seekBar = document.getElementById('videoSeek');
-const timeText = document.getElementById('videoTime');
-
-function formatTime(seconds) {
-
-  if (!Number.isFinite(seconds)) {
-    return '0:00';
-  }
-
-  const minutes = Math.floor(seconds / 60);
-  const secondsLeft = Math.floor(seconds % 60);
-
-  return minutes + ':' + String(secondsLeft).padStart(2,'0');
-}
-
-
-/* Phát và tạm dừng */
-
-playBtn.addEventListener('click', () => {
-
-  if (player.paused) {
-
-    player.play().catch(error => {
-      console.log('Không thể phát video:', error);
-    });
-
-  } else {
-
-    player.pause();
-
-  }
-
-});
-
-
-player.addEventListener('play', () => {
-  playBtn.textContent = '❚❚';
-});
-
-player.addEventListener('pause', () => {
-  playBtn.textContent = '▶';
-});
-
-
-/* Cập nhật thời gian */
-
-player.addEventListener('loadedmetadata', () => {
-
-  timeText.textContent =
-    '0:00 / ' + formatTime(player.duration);
-
-  seekBar.value = 0;
-
-});
-
-
-player.addEventListener('timeupdate', () => {
-
-  if (player.duration && Number.isFinite(player.duration)) {
-
-    seekBar.value =
-      (player.currentTime / player.duration) * 100;
-
-    timeText.textContent =
-      formatTime(player.currentTime) +
-      ' / ' +
-      formatTime(player.duration);
-
-  }
-
-});
-
-
-/* Tua video */
-
-seekBar.addEventListener('input', () => {
-
-  if (player.duration && Number.isFinite(player.duration)) {
-
-    player.currentTime =
-      (Number(seekBar.value) / 100) * player.duration;
-
-  }
-
-});
-
-
-/* Bật và tắt âm thanh */
-
-muteBtn.addEventListener('click', () => {
-
-  player.muted = !player.muted;
-
-  muteBtn.textContent = player.muted ? '🔇' : '🔊';
-
-});
-
-
-player.addEventListener('volumechange', () => {
-
-  muteBtn.textContent = player.muted ? '🔇' : '🔊';
-
-});
-
-
-/* Khi video kết thúc */
-
-player.addEventListener('ended', () => {
-  playBtn.textContent = '▶';
-});
-
-
-/* ================================
-   MỞ CỬA SỔ DI TÍCH
-================================ */
-
+// ===== CỬA SỔ DI TÍCH: VIDEO TỰ PHÁT, THUYẾT MINH FILE RIÊNG BỔ SUNG SAU =====
 let currentTourSite = null;
 
-function openTour(site) {
-
-  currentTourSite = site;
-
-  document.getElementById('tourTitle').textContent =
-    site.name || 'Tham quan di tích';
-
-  document.getElementById('tourDescription').textContent =
-    site.description || 'Thông tin di tích đang được cập nhật.';
-
-  document.getElementById('tourOverlay').classList.add('open');
-
-  document.body.style.overflow = 'hidden';
-
-  const nextSrc = site.video ? './' + site.video : '';
-
-  player.pause();
-  player.removeAttribute('src');
-  player.load();
-
-  player.currentTime = 0;
-  seekBar.value = 0;
-  timeText.textContent = '0:00 / 0:00';
-
-  player.muted = true;
-  muteBtn.textContent = '🔇';
-  playBtn.textContent = '▶';
-
-  if (nextSrc) {
-
-    player.src = nextSrc;
-
-    player.load();
-
-    player.play().catch(() => {
-
-      document.getElementById('tourCaption').textContent =
-        'Nếu video chưa tự chạy, nhấn nút phát bên dưới video.';
-
-    });
-
-  }
-
-  /* Âm thanh thuyết minh riêng nếu có */
-
-  const audio = document.getElementById('tourNarrationAudio');
-
-  audio.pause();
-  audio.removeAttribute('src');
-  audio.load();
-
-  if (site.narrationAudio) {
-
-    audio.src = './' + site.narrationAudio;
-
-    audio.play().catch(() => {});
-
-  }
-
-  document.getElementById('tourCaption').textContent =
-    site.name + ' – Video giới thiệu di tích';
-
+function openTour(site){
+ currentTourSite = site;
+ document.getElementById('tourTitle').textContent = site.name || 'Tham quan di tích';
+ document.getElementById('tourDescription').textContent = site.description || 'Thông tin di tích đang được cập nhật.';
+ document.getElementById('tourOverlay').classList.add('open');
+ document.body.style.overflow='hidden';
+ const video=document.getElementById('tourVideo');
+ const nextSrc=site.video ? './'+site.video : '';
+ video.pause();
+ video.removeAttribute('src');
+ video.load();
+ if(nextSrc){
+   video.src=nextSrc;
+   video.muted=true; // tự phát ổn định trên trình duyệt; sẽ ghép file thuyết minh riêng sau
+   video.playsInline=true;
+   video.load();
+   video.play().catch(()=>{
+     document.getElementById('tourCaption').textContent='Nếu video chưa tự chạy, nhấn nút phát trên khung hình.';
+   });
+ }
+ const audio=document.getElementById('tourNarrationAudio');
+ audio.pause(); audio.removeAttribute('src'); audio.load();
+ if(site.narrationAudio){
+   audio.src='./'+site.narrationAudio;
+   audio.play().catch(()=>{});
+ }
+ document.getElementById('tourCaption').textContent=site.name+' – Video giới thiệu di tích';
 }
 
-
-/* ================================
-   ĐÓNG CỬA SỔ DI TÍCH
-================================ */
-
-function closeTour() {
-
-  player.pause();
-
-  player.removeAttribute('src');
-
-  player.load();
-
-  player.currentTime = 0;
-
-  seekBar.value = 0;
-
-  timeText.textContent = '0:00 / 0:00';
-
-  playBtn.textContent = '▶';
-
-  const audio = document.getElementById('tourNarrationAudio');
-
-  if (audio) {
-
-    audio.pause();
-
-    audio.removeAttribute('src');
-
-    audio.load();
-
-  }
-
-  document.getElementById('tourOverlay').classList.remove('open');
-
-  document.body.style.overflow = '';
-
-  currentTourSite = null;
-
+function closeTour(){
+ const video=document.getElementById('tourVideo');
+ video.pause();
+ video.removeAttribute('src');
+ video.load();
+ const audio=document.getElementById('tourNarrationAudio');
+ if(audio){audio.pause();audio.removeAttribute('src');audio.load();}
+ document.getElementById('tourOverlay').classList.remove('open');
+ document.body.style.overflow='';
+ currentTourSite=null;
 }
+function openDirections(){if(currentTourSite && currentTourSite.directions)window.open(currentTourSite.directions,'_blank','noopener');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('tourOverlay').classList.contains('open'))closeTour();});
 
-
-/* ================================
-   CHỈ ĐƯỜNG
-================================ */
-
-function openDirections() {
-
-  if (currentTourSite && currentTourSite.directions) {
-
-    window.open(
-      currentTourSite.directions,
-      '_blank',
-      'noopener'
-    );
-
-  }
-
-}
-
-
-/* Đóng cửa sổ bằng phím ESC */
-
-document.addEventListener('keydown', event => {
-
-  if (
-    event.key === 'Escape' &&
-    document.getElementById('tourOverlay').classList.contains('open')
-  ) {
-
-    closeTour();
-
-  }
-
-});
-
-
-/* ================================
-   ĐIỂM QR
-================================ */
-
-const qrPoints = [
-
-  {
-    name:'Điểm QR tuyến đường số 1',
-    lat:10.904,
-    lon:106.706
-  },
-
-  {
-    name:'Điểm QR tuyến đường số 2',
-    lat:10.911,
-    lon:106.702
-  }
-
+const qrPoints=[
+{name:'Điểm QR tuyến đường số 1',lat:10.904,lon:106.706},
+{name:'Điểm QR tuyến đường số 2',lat:10.911,lon:106.702}
 ];
 
-
-qrPoints.forEach(point => {
-
-  const marker = L.circleMarker(
-    [point.lat,point.lon],
-    {
-      radius:9,
-      color:'#0878dc',
-      fillColor:'#42a5f5',
-      fillOpacity:1
-    }
-  ).addTo(qrLayer);
-
-  marker.bindPopup(
-    '<b>' + point.name + '</b>' +
-    '<p>Thay bằng vị trí QR thực tế.</p>'
-  );
-
+qrPoints.forEach(point=>{
+ const marker=L.circleMarker([point.lat,point.lon],{
+  radius:9,color:'#0878dc',fillColor:'#42a5f5',fillOpacity:1
+ }).addTo(qrLayer);
+ marker.bindPopup('<b>'+point.name+'</b><p>Thay bằng vị trí QR thực tế.</p>');
 });
 
+function showLayer(which){
+ ['all','heritage','qr'].forEach(id=>{
+  document.getElementById(id).classList.toggle('active',id===which);
+ });
 
-/* ================================
-   CHUYỂN LỚP BẢN ĐỒ
-================================ */
+ if(which==='all'||which==='heritage') map.addLayer(heritageLayer);
+ else map.removeLayer(heritageLayer);
 
-function showLayer(which) {
+ if(which==='all'||which==='qr') map.addLayer(qrLayer);
+ else map.removeLayer(qrLayer);
 
-  ['all','heritage','qr'].forEach(id => {
-
-    document.getElementById(id).classList.toggle(
-      'active',
-      id === which
-    );
-
-  });
-
-  if (which === 'all' || which === 'heritage') {
-    map.addLayer(heritageLayer);
-  } else {
-    map.removeLayer(heritageLayer);
-  }
-
-  if (which === 'all' || which === 'qr') {
-    map.addLayer(qrLayer);
-  } else {
-    map.removeLayer(qrLayer);
-  }
-
-  /* Luôn giữ đường ranh giới */
-
-  if (boundaryLayer && !map.hasLayer(boundaryLayer)) {
-    boundaryLayer.addTo(map);
-  }
-
+ // Luôn giữ đường ranh giới khi đổi lớp
+ if(boundaryLayer && !map.hasLayer(boundaryLayer)){
+   boundaryLayer.addTo(map);
+ }
 }
 
-
-/* ================================
-   TOÀN CẢNH PHƯỜNG
-================================ */
-
-function showWholeWard() {
-
-  if (boundaryLayer && wardBounds && wardBounds.isValid()) {
-
-    map.fitBounds(
-      wardBounds,
-      {padding:[20,20]}
-    );
-
-  } else {
-
-    alert(
-      'Ranh giới đang tải hoặc chưa tải được. Thử tải lại trang nhé.'
-    );
-
-  }
-
+function showWholeWard(){
+ if(boundaryLayer && wardBounds && wardBounds.isValid()){
+   map.fitBounds(wardBounds,{padding:[20,20]});
+ } else {
+   alert('Ranh giới đang tải hoặc chưa tải được. Thử tải lại trang nhé.');
+ }
 }
-
 </script>
-
 </body>
 </html>
